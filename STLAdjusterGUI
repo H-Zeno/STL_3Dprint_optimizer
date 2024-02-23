@@ -1,0 +1,51 @@
+# Take care, this code is (for now) just the output from ChatGPT
+
+import tkinter as tk
+from tkinter import filedialog
+from stl import mesh
+import numpy as np
+
+class STLAdjusterApp:
+    def __init__(self, root):
+        self.root = root
+        root.title('STL File Adjuster')
+
+        # Scale factor input
+        tk.Label(root, text="Scale Factor:").grid(row=0, column=0)
+        self.scale_factor_entry = tk.Entry(root)
+        self.scale_factor_entry.grid(row=0, column=1)
+
+        # Load STL button
+        self.load_button = tk.Button(root, text="Load STL", command=self.load_stl)
+        self.load_button.grid(row=1, column=0, columnspan=2)
+
+        # Apply button
+        self.apply_button = tk.Button(root, text="Apply Transformation", command=self.apply_transformation)
+        self.apply_button.grid(row=2, column=0, columnspan=2)
+
+        self.stl_mesh = None
+
+    def load_stl(self):
+        file_path = filedialog.askopenfilename(filetypes=[("STL files", "*.stl")])
+        if file_path:
+            self.stl_mesh = mesh.Mesh.from_file(file_path)
+
+    def apply_transformation(self):
+        if self.stl_mesh is None:
+            print("No STL file loaded.")
+            return
+
+        try:
+            scale_factor = float(self.scale_factor_entry.get())
+            self.stl_mesh.points *= scale_factor
+            save_path = filedialog.asksaveasfilename(defaultextension=".stl", filetypes=[("STL files", "*.stl")])
+            if save_path:
+                self.stl_mesh.save(save_path)
+                print("Transformation applied and file saved.")
+        except ValueError:
+            print("Invalid scale factor.")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = STLAdjusterApp(root)
+    root.mainloop()
