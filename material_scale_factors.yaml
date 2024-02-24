@@ -1,0 +1,17 @@
+# source: https://filament2print.com/gb/blog/136_warping-contractions-3D-printing-parts.html
+
+# rescale factors to compensate for the shrinkage of the material during cooling
+cooling_rescale_factors:
+    ABS: 1.0116
+    ASA: 1.0055
+    Fibre-reinforced PEEK: 1.0065
+    Fibre-reinforced nylon: 1.0076
+    HIPS: 1.0050
+    Nylon 12: 1.0137
+    Nylon 6-6: 1.019
+    PC/ABS: 1.0060
+    PEEK: 1.0137
+    PETG: 1.0060
+    PLA: 1.0040
+    PP: 1.0204
+    PVDF: 1.0309

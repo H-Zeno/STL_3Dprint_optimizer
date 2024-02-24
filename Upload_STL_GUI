@@ -1,0 +1,131 @@
+from tkinter import ttk
+import tkinter as tk
+import yaml
+from tkinter import filedialog
+from STL_edit import *
+
+
+# load the yaml file
+yaml_file_path = 'material_scale_factors.yaml'
+
+with open(yaml_file_path, 'r') as yaml_file:
+    rescale_data = yaml.safe_load(yaml_file)
+
+class STLAdjusterApp:
+    def __init__(self, root):
+        #self.main_window = root
+        root.geometry('500x400')
+        root.title('Upload STL file for printing')
+        self.material_list = ["ABS", "ASA", "Fibre-reinforced PEEK", "Fibre-reinforced nylon", "HIPS", "Nylon 12", "Nylon 6-6", "PC/ABS", "PEEK", "PETG", "PLA", "PP", "PVDF"]
+        
+        # Upload STL model
+        self.load_button = ttk.Button(root, text="Upload STL file", command=self.load_stl) # the load_stl function will be exectuted
+        self.load_button.grid(row=0, column=0, columnspan=2)
+
+        # Combobox to select printing material
+        ttk.Label(root, text="Select printing material:").grid(row=1, column=0)
+        self.material_menu = ttk.Combobox(root, state="readonly",
+                values=self.material_list)
+        
+        self.material_menu.grid(row=1, column=1)
+        self.material_menu.bind("<<ComboboxSelected>>", self.update_rescale_factor)
+        
+        # Display the recommended rescale factor for the selected material:
+        self.rescale_label_text = tk.StringVar()
+        self.rescale_label = ttk.Label(root, textvariable=self.rescale_label_text)
+        self.rescale_label.grid(row=2, column=0, columnspan=2)
+
+        # Initially, set the rescale_label_text to "N/A"
+        self.update_rescale_factor()
+        
+        
+        ############## Additional manipulations to the STL model #####################
+        tk.Label(root, text="Additional Transformations:").grid(row=3, column=0)
+        
+        #Scale factor input, should be a default of one
+        ttk.Label(root, text="Additional rescale factor:").grid(row=4, column=0)
+        self.additional_rescale_entry = ttk.Entry(root)
+        self.additional_rescale_entry.insert(0, "1")  # Inserting default value
+        self.additional_rescale_entry.grid(row=4, column=1)
+        
+        # X, Y, Z translation
+        tk.Label(root, text="Translate X:").grid(row=5, column=0)
+        self.translate_x_entry = tk.Entry(root)
+        self.translate_x_entry.insert(0, "0")  # Inserting default value
+        self.translate_x_entry.grid(row=5, column=1)
+        tk.Label(root, text="Translate Y:").grid(row=6, column=0)
+        self.translate_y_entry = tk.Entry(root)
+        self.translate_y_entry.insert(0, "0")  # Inserting default value
+        self.translate_y_entry.grid(row=6, column=1)
+        tk.Label(root, text="Translate Z:").grid(row=7, column=0)
+        self.translate_z_entry = tk.Entry(root)
+        self.translate_z_entry.insert(0, "0")  # Inserting default value
+        self.translate_z_entry.grid(row=7, column=1)
+
+        # Rotation for X, Y and Z (input in radians)
+        tk.Label(root, text="Rotate X (rad):").grid(row=8, column=0)
+        self.rotate_x_entry = tk.Entry(root)
+        self.rotate_x_entry.insert(0, "0")  # Inserting default value
+        self.rotate_x_entry.grid(row=8, column=1)
+        tk.Label(root, text="Rotate Y (rad):").grid(row=9, column=0)
+        self.rotate_y_entry = tk.Entry(root)
+        self.rotate_y_entry.insert(0, "0")  # Inserting default value
+        self.rotate_y_entry.grid(row=9, column=1)
+        tk.Label(root, text="Rotate Z (rad):").grid(row=10, column=0)
+        self.rotate_z_entry = tk.Entry(root)
+        self.rotate_z_entry.insert(0, "0")  # Inserting default value
+        self.rotate_z_entry.grid(row=10, column=1)
+        
+
+        ############# Start printing button ################	
+        self.print_button = ttk.Button(root, text="Apply Transformations and Start Printing", command=self.apply_transformations)
+        self.print_button.grid(row=11, column=0, columnspan=2)
+        
+    # Update the rescale factor label when a material is selected (for UI and debugging)
+    def update_rescale_factor(self, event=None):
+        selected_material = self.material_menu.get()
+        self.rescale_factor = rescale_data['cooling_rescale_factors'].get(selected_material, "N/A")  # Default to "N/A" if material not found
+        self.rescale_label_text.set(f"The material will be rescaled with the recommended rescale factor of {self.rescale_factor}")
+        
+    # load and read the STL file
+    def load_stl(self):
+        file_path = filedialog.askopenfilename(filetypes=[("STL files", "*.stl")])
+        if file_path:
+            self.STL_file = STL_model(file_path)
+            self.STL_file.read_stl_text()
+
+    def apply_transformations(self):
+        scale_factor = float(self.rescale_factor) * float(self.additional_rescale_entry.get())
+        translate_vector = [float(self.translate_x_entry.get()), float(self.translate_y_entry.get()), float(self.translate_z_entry.get())]
+        R = rotZ(float(self.rotate_z_entry.get())) @ rotY(float(self.rotate_y_entry.get())) @ rotX(float(self.rotate_x_entry.get())) # euler angles
+        
+        # Apply the transformations
+        try:
+            self.STL_file.scale(scale_factor)
+            self.STL_file.translate(translate_vector)
+            self.STL_file.rotate(R)
+        except AttributeError:
+            print("Error: No STL file is loaded.")
+            
+    
+        # Save the new STL file
+        save_path = filedialog.asksaveasfilename(defaultextension=".stl", filetypes=[("STL files", "*.stl")])
+        if save_path:
+            try:
+                self.STL_file.write_stl_text(save_path)
+                print("Transformations applied, file is saved and ready for printing.")
+            except Exception as e:
+                print("Error: Could not save the file.")
+            
+
+if __name__ == "__main__":
+    main_window = tk.Tk()
+    app = STLAdjusterApp(main_window)
+    main_window.mainloop()
+    
+    
+    
+    
+    
+    
+# To further improve the printing accuracy, a 3D reconstruction of the print will be made and
