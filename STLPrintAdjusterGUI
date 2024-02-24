@@ -1,8 +1,8 @@
 from tkinter import ttk
 import tkinter as tk
-import yaml
 from tkinter import filedialog
-from STL_edit import *
+import yaml
+from STL_edit import STL_model, rotX, rotY, rotZ
 
 
 # load the yaml file
@@ -11,7 +11,7 @@ yaml_file_path = 'material_scale_factors.yaml'
 with open(yaml_file_path, 'r') as yaml_file:
     rescale_data = yaml.safe_load(yaml_file)
 
-class STLAdjusterApp:
+class STLPrintAdjusterGUI:
     def __init__(self, root):
         #self.main_window = root
         root.geometry('500x400')
@@ -106,7 +106,6 @@ class STLAdjusterApp:
             self.STL_file.rotate(R)
         except AttributeError:
             print("Error: No STL file is loaded.")
-            
     
         # Save the new STL file
         save_path = filedialog.asksaveasfilename(defaultextension=".stl", filetypes=[("STL files", "*.stl")])
@@ -120,12 +119,11 @@ class STLAdjusterApp:
 
 if __name__ == "__main__":
     main_window = tk.Tk()
-    app = STLAdjusterApp(main_window)
+    app = STLPrintAdjusterGUI(main_window)
     main_window.mainloop()
     
     
     
-    
-    
+
     
 # To further improve the printing accuracy, a 3D reconstruction of the print will be made and

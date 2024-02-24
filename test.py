@@ -1,4 +1,5 @@
-from STL_edit import *
+import numpy as np
+from STL_edit import STL_model, rotX, rotY, rotZ
 
 
 # Load the STL model

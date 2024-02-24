@@ -1,0 +1,27 @@
+import numpy as np
+from STL_edit import STL_model
+
+# 1. Construction of a 3D model (mesh) from camera images
+
+# Possible methods:
+# 1. Structure from Motion (SfM) and Multi-View Stereo (MVS) algorithms (photogrammetry)
+# 2. Nerfs (Neural Radiance Fields) https://www.geowgs84.com/post/nerf-3d-models-what-s-the-big-deal
+# 3. Gaussian Splatting (for very real-time)
+
+# 2. a function that takes 2 STL models as input and returns the error (or difference between the two)
+def STL_difference_factor(STL_model1, STL_model2, vol_scale=3, centroid_scale=1):
+    
+    # Read the STL models
+    STL_model1.read_stl_text()
+    STL_model2.read_stl_text()
+    
+    # volumetric difference
+    vol_error = abs(STL_model1.volume - STL_model2.volume)
+    
+    # difference of centroid position
+    centroid_error = np.linalg.norm(np.array(STL_model1.centroid) - np.array(STL_model2.centroid))
+    
+    return vol_error*vol_scale + centroid_error*centroid_scale
+# Note: there is still a lot of computational optimisation that should happen here
+
+# 3. Apply an optimal control algorithm to find the a minimul of the STL_difference_factor during printing

@@ -1,6 +1,7 @@
 import logging
-import numpy as np
 from math import cos, sin
+import numpy as np
+
 
 
 # helper functions to calculate the rotation matrix (theta is in radians)
@@ -42,8 +43,10 @@ class STL_model():
         self.triangles = []
         self.volumes = []
         self.centroid = None
+        self.volume = None
         self.name = None
- 
+        
+
     # Read the ASCII STL file
     def read_stl_text(self):
         print("Attempting to read STL file (ASCII type):", self.filename)
@@ -76,6 +79,9 @@ class STL_model():
                         self.triangles.append(triangle(vertices[0], vertices[1], vertices[2], normal))
                     else:
                         logging.exception("Less than 3 vertices were found (3 vertices are required to define a triangle)")
+        
+        # read the centroid and the total volume of the STL model
+        self.calc_centroid()
         
         print('Read ACII STL file', self.filename, 'succesfully!')
         text.close()
@@ -119,11 +125,13 @@ class STL_model():
     def calc_centroid(self):
         triangle_centroids = []
         self.volumes = []
+        self.volume = 0
         
         for tri in self.triangles:
             p1, p2, p3 = tri.vertices[0], tri.vertices[1], tri.vertices[2]
             volume = 1/6 * abs(np.linalg.det(np.array([p1, p2, p3]).T)) # scalar triple product, equivalent to determinant (volume of the tetrahedron)
             triangle_centroids.append((p1 + p2 + p3)/4) #4 since the origin (0,0,0) is the fourth vertex of the tetrahedron
+            self.volume += volume 
             self.volumes.append(volume)
         
         print('Volumes:', self.volumes)
